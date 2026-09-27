@@ -157,7 +157,7 @@ Promise.all([
   fetch('./assets/data/states.geojson').then(r => r.json()),
   fetch('./assets/data/zip-state.json').then(r => r.json()),
   fetch('./assets/data/cpi.json').then(r => r.json()),
-  fetch('./assets/data/eia-weekly.json').then(r => r.json()),
+  fetch(`./assets/data/eia-weekly.json?loaded=${Date.now()}`, { cache: 'no-store' }).then(r => r.json()),
   fetch('./assets/data/eia-state-2024.json').then(r => r.json())
 ]).then(([geo, zips, prices, measured, stateData]) => { features = geo.features; zipLookup = zips; cpi = prices; eia = measured; statePrices = stateData; drawMap(); $('map-date').textContent = `EIA state estimates · ${statePrices.year}`; $('footer-data-date').textContent = `From Barrel to Pump · EIA state estimates ${statePrices.year} · weekly prices retrieved ${eia.retrieved} · CPI through August 2026`; selectState('IL'); renderInflation(); }).catch(() => {
   $('search-message').textContent = 'Map data could not load. Please reload the page.';

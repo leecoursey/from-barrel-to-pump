@@ -145,4 +145,4 @@ function renderEvent(id = '2001') {
   $('use-event').addEventListener('click', () => { $('old-price').value = event.price; $('old-month').value = event.month; $('old-price').dispatchEvent(new Event('input')); $('inflation').scrollIntoView({ behavior: 'smooth' }); });
 }
 renderEvent();
-Promise.all([fetch('./assets/data/eia-weekly.json').then(response => response.json()), fetch('./assets/data/cpi.json').then(response => response.json())]).then(([measured, prices]) => { data = measured; cpi = prices; renderChart(); }).catch(() => { $('chart-readout').textContent = 'EIA or BLS price data could not load. Reload the page or inspect the source links.'; });
+Promise.all([fetch(`./assets/data/eia-weekly.json?loaded=${Date.now()}`, { cache: 'no-store' }).then(response => response.json()), fetch('./assets/data/cpi.json').then(response => response.json())]).then(([measured, prices]) => { data = measured; cpi = prices; renderChart(); }).catch(() => { $('chart-readout').textContent = 'EIA or BLS price data could not load. Reload the page or inspect the source links.'; });
