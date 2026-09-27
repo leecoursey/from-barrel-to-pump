@@ -9,7 +9,8 @@ const series = {
   gulf: 'EMM_EPMR_PTE_R30_DPG',
   rocky: 'EMM_EPMR_PTE_R40_DPG',
   west: 'EMM_EPMR_PTE_R50_DPG',
-  wti: 'RWTC'
+  wti: 'RWTC',
+  wholesale: 'EER_EPMRU_PF4_Y35NY_DPG'
 };
 const base = 'https://www.eia.gov/dnav/pet/hist/LeafHandler.ashx?f=w&n=pet&s=';
 const monthNumber = Object.fromEntries(['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'].map((m, i) => [m, String(i + 1).padStart(2, '0')]));
@@ -31,7 +32,7 @@ function parseTable(html, label) {
   return rows;
 }
 
-const data = { source: 'U.S. Energy Information Administration', retrieved: new Date().toISOString().slice(0, 10), units: { gasoline: 'dollars per gallon, including taxes', wti: 'dollars per barrel' }, series: {} };
+const data = { source: 'U.S. Energy Information Administration', retrieved: new Date().toISOString().slice(0, 10), units: { gasoline: 'retail dollars per gallon, including taxes', wti: 'dollars per barrel', wholesale: 'New York Harbor conventional regular gasoline spot dollars per gallon, FOB' }, series: {} };
 for (const [key, code] of Object.entries(series)) {
   const url = base + code;
   let html;
