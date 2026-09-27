@@ -67,6 +67,8 @@ function selectState(abbr) {
   const region = regions[regionFor(abbr)];
   $('region-name').textContent = region.name;
   $('state-name').textContent = `${feature.properties.name} · EIA petroleum region`;
+  $('aaa-local').href = `https://gasprices.aaa.com/?state=${encodeURIComponent(abbr)}`;
+  $('aaa-local').textContent = `See today's ${feature.properties.name} state, county, and metro averages at AAA ↗`;
   const key = regionFor(abbr);
   const latest = eia?.series[key]?.values.at(-1);
   $('region-price').textContent = latest ? `$${latest[1].toFixed(3)}` : '—';
