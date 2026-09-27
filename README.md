@@ -7,6 +7,10 @@ An interactive, public explainer of how crude oil becomes gasoline, why pump pri
 
 The site is static HTML, CSS, and JavaScript hosted by GitHub Pages. A scheduled GitHub Action downloads EIA's public tables, validates them, and commits a dated price file. The browser uses that file, so no credential or unreliable live request is needed when someone opens the page.
 
+## AI assistance and model disclosure
+
+This is an **AI-assisted project**. The human project owner set the goals, requested changes, and provided feedback. OpenAI Codex assisted with design, research, coding, and documentation. **OpenAI GPT-6** is the model family verified for development and revisions in this project conversation. Exact model identifiers for earlier work were not retained in the repository, so this is a verified model disclosure rather than a claim that no other models were used. Data and factual claims should be checked against the primary sources in the [source register](#source-register).
+
 ## What visitors can do
 
 - Click any state or search by state name, state code, or a five-digit ZIP Code. State colors show **2024 annual EIA state motor gasoline price estimates**, with the selected state's approximate dollars per gallon beside the map. The panel separately reports the latest published **weekly PADD regional regular gasoline average**. Neither is a live station price.
