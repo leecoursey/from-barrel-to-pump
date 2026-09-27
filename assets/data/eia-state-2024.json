@@ -1,0 +1,366 @@
+{
+  "year": 2024,
+  "priceSource": "https://www.eia.gov/state/seds/sep_fuel/html/pdf/fuel_pr_mg.pdf",
+  "volumeSource": "https://www.eia.gov/state/seds/sep_fuel/html/fuel_use_mg.html",
+  "units": "estimated dollars per gallon",
+  "formula": "($/million Btu) × (trillion Btu / thousand barrels) × 1000 / 42",
+  "states": {
+    "NE": {
+      "name": "Nebraska",
+      "pricePerMMBtu": 26.68,
+      "thousandBarrels": 21738,
+      "trillionBtu": 109.8,
+      "pricePerGallon": 3.209
+    },
+    "WA": {
+      "name": "Washington",
+      "pricePerMMBtu": 33.82,
+      "thousandBarrels": 61681,
+      "trillionBtu": 311.5,
+      "pricePerGallon": 4.067
+    },
+    "NM": {
+      "name": "New Mexico",
+      "pricePerMMBtu": 25.09,
+      "thousandBarrels": 22518,
+      "trillionBtu": 113.7,
+      "pricePerGallon": 3.016
+    },
+    "SD": {
+      "name": "South Dakota",
+      "pricePerMMBtu": 26.87,
+      "thousandBarrels": 11508,
+      "trillionBtu": 58.1,
+      "pricePerGallon": 3.23
+    },
+    "TX": {
+      "name": "Texas",
+      "pricePerMMBtu": 23.97,
+      "thousandBarrels": 351166,
+      "trillionBtu": 1773.4,
+      "pricePerGallon": 2.882
+    },
+    "CA": {
+      "name": "California",
+      "pricePerMMBtu": 36.76,
+      "thousandBarrels": 312840,
+      "trillionBtu": 1579.8,
+      "pricePerGallon": 4.42
+    },
+    "KY": {
+      "name": "Kentucky",
+      "pricePerMMBtu": 26.4,
+      "thousandBarrels": 52269,
+      "trillionBtu": 264,
+      "pricePerGallon": 3.175
+    },
+    "OH": {
+      "name": "Ohio",
+      "pricePerMMBtu": 27.01,
+      "thousandBarrels": 113235,
+      "trillionBtu": 571.8,
+      "pricePerGallon": 3.247
+    },
+    "AL": {
+      "name": "Alabama",
+      "pricePerMMBtu": 24.03,
+      "thousandBarrels": 77985,
+      "trillionBtu": 393.8,
+      "pricePerGallon": 2.889
+    },
+    "GA": {
+      "name": "Georgia",
+      "pricePerMMBtu": 24.54,
+      "thousandBarrels": 117070,
+      "trillionBtu": 591.2,
+      "pricePerGallon": 2.951
+    },
+    "WI": {
+      "name": "Wisconsin",
+      "pricePerMMBtu": 27.27,
+      "thousandBarrels": 59468,
+      "trillionBtu": 300.3,
+      "pricePerGallon": 3.279
+    },
+    "OR": {
+      "name": "Oregon",
+      "pricePerMMBtu": 33.75,
+      "thousandBarrels": 34516,
+      "trillionBtu": 174.3,
+      "pricePerGallon": 4.058
+    },
+    "PA": {
+      "name": "Pennsylvania",
+      "pricePerMMBtu": 28.26,
+      "thousandBarrels": 105434,
+      "trillionBtu": 532.4,
+      "pricePerGallon": 3.398
+    },
+    "MS": {
+      "name": "Mississippi",
+      "pricePerMMBtu": 24.11,
+      "thousandBarrels": 39623,
+      "trillionBtu": 200.1,
+      "pricePerGallon": 2.899
+    },
+    "MO": {
+      "name": "Missouri",
+      "pricePerMMBtu": 25.2,
+      "thousandBarrels": 76785,
+      "trillionBtu": 387.8,
+      "pricePerGallon": 3.03
+    },
+    "NC": {
+      "name": "North Carolina",
+      "pricePerMMBtu": 26.44,
+      "thousandBarrels": 123140,
+      "trillionBtu": 621.9,
+      "pricePerGallon": 3.179
+    },
+    "OK": {
+      "name": "Oklahoma",
+      "pricePerMMBtu": 25.26,
+      "thousandBarrels": 46076,
+      "trillionBtu": 232.7,
+      "pricePerGallon": 3.037
+    },
+    "WV": {
+      "name": "West Virginia",
+      "pricePerMMBtu": 27.72,
+      "thousandBarrels": 17645,
+      "trillionBtu": 89.1,
+      "pricePerGallon": 3.333
+    },
+    "NY": {
+      "name": "New York",
+      "pricePerMMBtu": 26.35,
+      "thousandBarrels": 124969,
+      "trillionBtu": 631.1,
+      "pricePerGallon": 3.168
+    },
+    "IN": {
+      "name": "Indiana",
+      "pricePerMMBtu": 25.53,
+      "thousandBarrels": 71142,
+      "trillionBtu": 359.3,
+      "pricePerGallon": 3.07
+    },
+    "KS": {
+      "name": "Kansas",
+      "pricePerMMBtu": 25.79,
+      "thousandBarrels": 32593,
+      "trillionBtu": 164.6,
+      "pricePerGallon": 3.101
+    },
+    "ID": {
+      "name": "Idaho",
+      "pricePerMMBtu": 27.82,
+      "thousandBarrels": 17986,
+      "trillionBtu": 90.8,
+      "pricePerGallon": 3.344
+    },
+    "NV": {
+      "name": "Nevada",
+      "pricePerMMBtu": 32.9,
+      "thousandBarrels": 28112,
+      "trillionBtu": 142,
+      "pricePerGallon": 3.957
+    },
+    "VT": {
+      "name": "Vermont",
+      "pricePerMMBtu": 27.98,
+      "thousandBarrels": 6761,
+      "trillionBtu": 34.1,
+      "pricePerGallon": 3.36
+    },
+    "MT": {
+      "name": "Montana",
+      "pricePerMMBtu": 27.7,
+      "thousandBarrels": 13286,
+      "trillionBtu": 67.1,
+      "pricePerGallon": 3.331
+    },
+    "MN": {
+      "name": "Minnesota",
+      "pricePerMMBtu": 26.19,
+      "thousandBarrels": 58077,
+      "trillionBtu": 293.3,
+      "pricePerGallon": 3.149
+    },
+    "ND": {
+      "name": "North Dakota",
+      "pricePerMMBtu": 27.56,
+      "thousandBarrels": 10123,
+      "trillionBtu": 51.1,
+      "pricePerGallon": 3.312
+    },
+    "HI": {
+      "name": "Hawaii",
+      "pricePerMMBtu": 39.3,
+      "thousandBarrels": 9940,
+      "trillionBtu": 50.2,
+      "pricePerGallon": 4.726
+    },
+    "AZ": {
+      "name": "Arizona",
+      "pricePerMMBtu": 31.6,
+      "thousandBarrels": 71038,
+      "trillionBtu": 358.7,
+      "pricePerGallon": 3.799
+    },
+    "DE": {
+      "name": "Delaware",
+      "pricePerMMBtu": 27.52,
+      "thousandBarrels": 11747,
+      "trillionBtu": 59.3,
+      "pricePerGallon": 3.308
+    },
+    "RI": {
+      "name": "Rhode Island",
+      "pricePerMMBtu": 27.77,
+      "thousandBarrels": 8758,
+      "trillionBtu": 44.2,
+      "pricePerGallon": 3.337
+    },
+    "CO": {
+      "name": "Colorado",
+      "pricePerMMBtu": 26.06,
+      "thousandBarrels": 55178,
+      "trillionBtu": 278.7,
+      "pricePerGallon": 3.134
+    },
+    "UT": {
+      "name": "Utah",
+      "pricePerMMBtu": 27.69,
+      "thousandBarrels": 31308,
+      "trillionBtu": 158.1,
+      "pricePerGallon": 3.329
+    },
+    "VA": {
+      "name": "Virginia",
+      "pricePerMMBtu": 25.67,
+      "thousandBarrels": 96130,
+      "trillionBtu": 485.5,
+      "pricePerGallon": 3.087
+    },
+    "WY": {
+      "name": "Wyoming",
+      "pricePerMMBtu": 25.94,
+      "thousandBarrels": 8417,
+      "trillionBtu": 42.5,
+      "pricePerGallon": 3.119
+    },
+    "LA": {
+      "name": "Louisiana",
+      "pricePerMMBtu": 24.16,
+      "thousandBarrels": 51717,
+      "trillionBtu": 261.2,
+      "pricePerGallon": 2.905
+    },
+    "MI": {
+      "name": "Michigan",
+      "pricePerMMBtu": 25.8,
+      "thousandBarrels": 104452,
+      "trillionBtu": 527.5,
+      "pricePerGallon": 3.102
+    },
+    "MA": {
+      "name": "Massachusetts",
+      "pricePerMMBtu": 27.69,
+      "thousandBarrels": 60062,
+      "trillionBtu": 303.3,
+      "pricePerGallon": 3.329
+    },
+    "FL": {
+      "name": "Florida",
+      "pricePerMMBtu": 25.64,
+      "thousandBarrels": 225335,
+      "trillionBtu": 1137.9,
+      "pricePerGallon": 3.083
+    },
+    "CT": {
+      "name": "Connecticut",
+      "pricePerMMBtu": 28.01,
+      "thousandBarrels": 35681,
+      "trillionBtu": 180.2,
+      "pricePerGallon": 3.368
+    },
+    "NJ": {
+      "name": "New Jersey",
+      "pricePerMMBtu": 26.65,
+      "thousandBarrels": 84717,
+      "trillionBtu": 427.8,
+      "pricePerGallon": 3.204
+    },
+    "MD": {
+      "name": "Maryland",
+      "pricePerMMBtu": 27.65,
+      "thousandBarrels": 56345,
+      "trillionBtu": 284.5,
+      "pricePerGallon": 3.324
+    },
+    "SC": {
+      "name": "South Carolina",
+      "pricePerMMBtu": 24.88,
+      "thousandBarrels": 66940,
+      "trillionBtu": 338,
+      "pricePerGallon": 2.991
+    },
+    "ME": {
+      "name": "Maine",
+      "pricePerMMBtu": 27.84,
+      "thousandBarrels": 15674,
+      "trillionBtu": 79.2,
+      "pricePerGallon": 3.349
+    },
+    "NH": {
+      "name": "New Hampshire",
+      "pricePerMMBtu": 27.03,
+      "thousandBarrels": 16813,
+      "trillionBtu": 84.9,
+      "pricePerGallon": 3.25
+    },
+    "DC": {
+      "name": "District of Columbia",
+      "pricePerMMBtu": 28.94,
+      "thousandBarrels": 2376,
+      "trillionBtu": 12,
+      "pricePerGallon": 3.48
+    },
+    "IA": {
+      "name": "Iowa",
+      "pricePerMMBtu": 25.96,
+      "thousandBarrels": 36717,
+      "trillionBtu": 185.4,
+      "pricePerGallon": 3.121
+    },
+    "AR": {
+      "name": "Arkansas",
+      "pricePerMMBtu": 24.32,
+      "thousandBarrels": 36401,
+      "trillionBtu": 183.8,
+      "pricePerGallon": 2.924
+    },
+    "TN": {
+      "name": "Tennessee",
+      "pricePerMMBtu": 25.62,
+      "thousandBarrels": 82398,
+      "trillionBtu": 416.1,
+      "pricePerGallon": 3.08
+    },
+    "IL": {
+      "name": "Illinois",
+      "pricePerMMBtu": 26.42,
+      "thousandBarrels": 99689,
+      "trillionBtu": 503.4,
+      "pricePerGallon": 3.177
+    },
+    "AK": {
+      "name": "Alaska",
+      "pricePerMMBtu": 39.29,
+      "thousandBarrels": 6170,
+      "trillionBtu": 31.2,
+      "pricePerGallon": 4.73
+    }
+  }
+}

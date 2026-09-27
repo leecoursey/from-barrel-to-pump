@@ -7,7 +7,15 @@ const regions = {
   west: { name: 'West Coast', price: 4.094, color: '#dfaa9d', states: 'WA OR CA NV AZ AK HI'.split(' '), detail: 'West Coast prices reflect fuel specifications, taxes, operating costs, and supply constraints as well as transport distance. California’s special blend can limit substitutions during outages.' }
 };
 const regionFor = (abbr) => Object.keys(regions).find(key => regions[key].states.includes(abbr));
-let features = [], zipLookup = {}, cpi = {}, chosenState = null, eia = null;
+let features = [], zipLookup = {}, cpi = {}, chosenState = null, eia = null, statePrices = null;
+const heatBands = [
+  { max: 3, color: '#d5ebe8', label: 'Under $3.00' },
+  { max: 3.25, color: '#9fcebc', label: '$3.00–$3.24' },
+  { max: 3.5, color: '#f4d589', label: '$3.25–$3.49' },
+  { max: 4, color: '#ec9a60', label: '$3.50–$3.99' },
+  { max: Infinity, color: '#bd575d', label: '$4.00+' }
+];
+const heatColor = price => heatBands.find(band => price < band.max)?.color || '#dceaf2';
 document.querySelectorAll('.mode-nav a').forEach(link => link.addEventListener('click', () => {
   document.querySelectorAll('.mode-nav a').forEach(item => item.classList.toggle('active', item === link));
 }));
@@ -32,12 +40,18 @@ function drawMap() {
     const region = regions[regionFor(abbr)];
     const path = document.createElementNS('http://www.w3.org/2000/svg', 'path');
     path.setAttribute('d', geometryPath(feature.geometry, abbr));
-    path.setAttribute('fill', '#dceaf2');
+    const statePrice = statePrices?.states[abbr]?.pricePerGallon;
+    const fill = Number.isFinite(statePrice) ? heatColor(statePrice) : '#dceaf2';
+    path.setAttribute('fill', fill);
+    path.style.setProperty('--state-fill', fill);
     path.setAttribute('fill-rule', 'evenodd');
     path.setAttribute('class', 'state');
     path.setAttribute('tabindex', '0');
     path.setAttribute('role', 'button');
-    path.setAttribute('aria-label', `${name}, ${region.name} region`);
+    path.setAttribute('aria-label', `${name}: ${Number.isFinite(statePrice) ? `$${statePrice.toFixed(2)} per gallon, 2024 EIA annual state estimate` : 'state estimate unavailable'}. ${region.name} petroleum region. Select for details.`);
+    const title = document.createElementNS('http://www.w3.org/2000/svg', 'title');
+    title.textContent = `${name} · 2024 estimate: ${Number.isFinite(statePrice) ? `$${statePrice.toFixed(2)}/gal` : 'unavailable'}`;
+    path.append(title);
     path.dataset.abbr = abbr;
     path.addEventListener('click', () => selectState(abbr));
     path.addEventListener('keydown', e => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); selectState(abbr); } });
@@ -57,7 +71,7 @@ function drawMap() {
       <g class="ship-icon crude-ship" transform="translate(472 548)"><path d="M0 13h37l-6 13H7z"/><rect x="13" y="2" width="14" height="10"/><rect x="18" y="-3" width="4" height="5"/></g>
       <g class="ship-icon gas-ship" transform="translate(648 548)"><path d="M0 13h37l-6 13H7z"/><rect x="13" y="2" width="14" height="10"/><rect x="18" y="-3" width="4" height="5"/></g>
     </g>`);
-  $('legend').textContent = 'Click any state to see its EIA petroleum region. Map lines show conceptual flow types only.';
+  $('legend').innerHTML = `<strong>2024 estimated state price / gallon</strong>${heatBands.map(band => `<span><i class="heat-swatch" style="background:${band.color}"></i>${band.label}</span>`).join('')}<a href="https://www.eia.gov/state/seds/sep_fuel/html/pdf/fuel_pr_mg.pdf" target="_blank" rel="noopener">EIA data ↗</a>`;
   $('states-list').innerHTML = features.map(f => `<option value="${f.properties.name}"></option>`).join('');
 }
 function selectState(abbr) {
@@ -65,6 +79,9 @@ function selectState(abbr) {
   if (!feature) return;
   chosenState = abbr;
   const region = regions[regionFor(abbr)];
+  const statePrice = statePrices?.states[abbr]?.pricePerGallon;
+  $('state-price').textContent = Number.isFinite(statePrice) ? `$${statePrice.toFixed(2)}` : '—';
+  $('state-price-scope').textContent = `2024 annual ${feature.properties.name} estimate · all motor gasoline · approximate dollars per gallon. Not today's regular price.`;
   $('region-name').textContent = region.name;
   $('state-name').textContent = `${feature.properties.name} · EIA petroleum region`;
   $('aaa-local').href = `https://gasprices.aaa.com/?state=${encodeURIComponent(abbr)}`;
@@ -76,7 +93,7 @@ function selectState(abbr) {
   if (eia?.series[key]) $('regional-source').href = eia.series[key].url;
   $('region-detail').textContent = region.detail;
   $('place').value = feature.properties.name;
-  $('search-message').textContent = `Showing ${feature.properties.name}. The price is the latest ${region.name} weekly average.`;
+  $('search-message').textContent = `${feature.properties.name} selected · 2024 state map / latest ${region.name} weekly average`;
   document.querySelectorAll('.state').forEach(path => path.classList.toggle('selected', path.dataset.abbr === abbr));
   window.dispatchEvent(new CustomEvent('region-selected', { detail: { key, name: region.name } }));
 }
@@ -140,8 +157,9 @@ Promise.all([
   fetch('./assets/data/states.geojson').then(r => r.json()),
   fetch('./assets/data/zip-state.json').then(r => r.json()),
   fetch('./assets/data/cpi.json').then(r => r.json()),
-  fetch('./assets/data/eia-weekly.json').then(r => r.json())
-]).then(([geo, zips, prices, measured]) => { features = geo.features; zipLookup = zips; cpi = prices; eia = measured; drawMap(); $('map-date').textContent = `EIA week of ${eia.series.national.values.at(-1)[0]}`; $('footer-data-date').textContent = `From Barrel to Pump · EIA retrieved ${eia.retrieved} · CPI through August 2026`; selectState('IL'); renderInflation(); }).catch(() => {
+  fetch('./assets/data/eia-weekly.json').then(r => r.json()),
+  fetch('./assets/data/eia-state-2024.json').then(r => r.json())
+]).then(([geo, zips, prices, measured, stateData]) => { features = geo.features; zipLookup = zips; cpi = prices; eia = measured; statePrices = stateData; drawMap(); $('map-date').textContent = `EIA state estimates · ${statePrices.year}`; $('footer-data-date').textContent = `From Barrel to Pump · EIA state estimates ${statePrices.year} · weekly prices retrieved ${eia.retrieved} · CPI through August 2026`; selectState('IL'); renderInflation(); }).catch(() => {
   $('search-message').textContent = 'Map data could not load. Please reload the page.';
   $('inflation-formula').textContent = 'CPI data could not load. Please reload the page.';
 });
