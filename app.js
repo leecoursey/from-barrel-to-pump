@@ -8,6 +8,9 @@ const regions = {
 };
 const regionFor = (abbr) => Object.keys(regions).find(key => regions[key].states.includes(abbr));
 let features = [], zipLookup = {}, cpi = {}, chosenState = null;
+document.querySelectorAll('.mode-nav a').forEach(link => link.addEventListener('click', () => {
+  document.querySelectorAll('.mode-nav a').forEach(item => item.classList.toggle('active', item === link));
+}));
 
 function project([lon, lat], abbr) {
   if (abbr === 'AK') return [24 + ((lon > 0 ? lon - 360 : lon) + 180) * 4.5, 410 + (72 - lat) * 5.1];
@@ -23,13 +26,13 @@ function geometryPath(geometry, abbr) {
 }
 function drawMap() {
   const svg = $('map');
-  svg.innerHTML = '<text x="110" y="43" class="map-water-label">PACIFIC</text><text x="851" y="198" class="map-water-label">ATLANTIC</text><text x="534" y="552" class="map-water-label">GULF OF MEXICO</text>';
+  svg.innerHTML = '<text x="47" y="162" class="map-water-label">PACIFIC</text><text x="856" y="178" class="map-water-label">ATLANTIC</text><text x="540" y="566" class="map-water-label">GULF OF MEXICO</text>';
   for (const feature of features) {
     const { abbr, name } = feature.properties;
     const region = regions[regionFor(abbr)];
     const path = document.createElementNS('http://www.w3.org/2000/svg', 'path');
     path.setAttribute('d', geometryPath(feature.geometry, abbr));
-    path.setAttribute('fill', region.color);
+    path.setAttribute('fill', '#dceaf2');
     path.setAttribute('fill-rule', 'evenodd');
     path.setAttribute('class', 'state');
     path.setAttribute('tabindex', '0');
@@ -40,7 +43,21 @@ function drawMap() {
     path.addEventListener('keydown', e => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); selectState(abbr); } });
     svg.append(path);
   }
-  $('legend').innerHTML = Object.values(regions).map(r => `<span><i style="background:${r.color}"></i>${r.name}</span>`).join('');
+  // These paths indicate types of movement; they are not mapped pipelines or vessel tracks.
+  svg.insertAdjacentHTML('beforeend', `
+    <g aria-hidden="true">
+      <path class="route pipe-route" d="M167 300 C260 310 330 335 434 355 S560 421 592 435 M592 435 C668 407 720 318 813 259 M592 435 C665 370 741 385 803 434 M364 122 C372 220 397 298 434 355"/>
+      <path class="route crude-route" d="M18 255 C65 245 116 259 167 300 M980 260 C924 241 864 240 813 259 M505 588 C505 531 541 465 592 435"/>
+      <path class="route gas-route" d="M25 380 C82 370 130 376 177 405 M975 462 C911 477 853 468 803 434 M674 585 C665 527 631 469 592 435"/>
+      <circle class="supply-node" cx="167" cy="300" r="6"/><circle class="supply-node" cx="434" cy="355" r="6"/><circle class="supply-node" cx="592" cy="435" r="6"/><circle class="supply-node" cx="813" cy="259" r="6"/><circle class="supply-node" cx="803" cy="434" r="6"/>
+      <g class="ship-icon crude-ship" transform="translate(42 226)"><path d="M0 13h37l-6 13H7z"/><rect x="13" y="2" width="14" height="10"/><rect x="18" y="-3" width="4" height="5"/></g>
+      <g class="ship-icon gas-ship" transform="translate(44 350)"><path d="M0 13h37l-6 13H7z"/><rect x="13" y="2" width="14" height="10"/><rect x="18" y="-3" width="4" height="5"/></g>
+      <g class="ship-icon crude-ship" transform="translate(928 227)"><path d="M0 13h37l-6 13H7z"/><rect x="13" y="2" width="14" height="10"/><rect x="18" y="-3" width="4" height="5"/></g>
+      <g class="ship-icon gas-ship" transform="translate(925 432)"><path d="M0 13h37l-6 13H7z"/><rect x="13" y="2" width="14" height="10"/><rect x="18" y="-3" width="4" height="5"/></g>
+      <g class="ship-icon crude-ship" transform="translate(472 548)"><path d="M0 13h37l-6 13H7z"/><rect x="13" y="2" width="14" height="10"/><rect x="18" y="-3" width="4" height="5"/></g>
+      <g class="ship-icon gas-ship" transform="translate(648 548)"><path d="M0 13h37l-6 13H7z"/><rect x="13" y="2" width="14" height="10"/><rect x="18" y="-3" width="4" height="5"/></g>
+    </g>`);
+  $('legend').textContent = 'Click any state to see its EIA petroleum region. Map lines show conceptual flow types only.';
   $('states-list').innerHTML = features.map(f => `<option value="${f.properties.name}"></option>`).join('');
 }
 function selectState(abbr) {
@@ -65,8 +82,7 @@ function findPlace() {
     else $('search-message').textContent = `No Census ZIP-area match for ${query}. Try a state name. Some postal ZIPs have no Census ZIP Code Tabulation Area.`;
   } else $('search-message').textContent = 'Enter a U.S. state name, two-letter code, or five-digit ZIP Code.';
 }
-$('find').addEventListener('click', findPlace);
-$('place').addEventListener('keydown', e => { if (e.key === 'Enter') findPlace(); });
+$('region-search').addEventListener('submit', e => { e.preventDefault(); findPlace(); });
 
 const steps = [
   { icon: '◉', name: 'Crude oil', sub: 'A globally traded input', title: 'A barrel is 42 gallons of crude oil', text: 'U.S. refineries process domestic and imported crude. One barrel typically yields about 19–20 gallons of finished motor gasoline, plus diesel, jet fuel, and other products. The whole barrel’s cost cannot be assigned only to gasoline.', link: 'https://www.eia.gov/TOOLS/FAQS/faq.php?id=327&t=10' },
@@ -91,10 +107,10 @@ function renderScenario() {
   $('spread-value').textContent = `${spread} ${spread === 1 ? 'week' : 'weeks'}`;
   $('scenario-total').textContent = `${change < 0 ? '−' : '+'} $${Math.abs(change).toFixed(2)} / gallon`;
   const points = Array.from({ length: 13 }, (_, week) => [week, Math.max(0, Math.min(1, (week - delay) / spread))]);
-  const y = fraction => 240 - fraction * 165;
-  const x = week => 47 + week * 52;
+  const y = fraction => 150 - fraction * 110;
+  const x = week => 46 + week * 75;
   const path = points.map(([week, fraction], i) => `${i ? 'L' : 'M'}${x(week)},${y(fraction)}`).join(' ');
-  $('chart').innerHTML = `<line x1="47" y1="240" x2="680" y2="240" stroke="#aabbb8"/><line x1="47" y1="75" x2="680" y2="75" stroke="#d6e3dd" stroke-dasharray="5 5"/><text x="8" y="242" fill="#5e7078" font-size="13">0</text><text x="8" y="82" fill="#5e7078" font-size="13">${Math.abs(change).toFixed(2)}</text>${[0,2,4,6,8,10,12].map(w => `<text x="${x(w)-8}" y="268" fill="#5e7078" font-size="12">${w}</text>`).join('')}<path d="${path}" fill="none" stroke="#087f82" stroke-width="5" stroke-linecap="round" stroke-linejoin="round"/><circle cx="${x(12)}" cy="${y(points[12][1])}" r="7" fill="#087f82"/><text x="600" y="55" fill="#365861" font-size="13">${change < 0 ? 'Decrease' : 'Increase'} magnitude</text>`;
+  $('chart').innerHTML = `<line x1="46" y1="150" x2="964" y2="150" stroke="#a9bfd2"/><line x1="46" y1="40" x2="964" y2="40" stroke="#d5e3ed" stroke-dasharray="5 6"/><line x1="${x(delay)}" y1="29" x2="${x(delay)}" y2="151" stroke="#d5e3ed" stroke-dasharray="5 6"/><text x="4" y="153" fill="#577491" font-size="13">0</text><text x="4" y="43" fill="#577491" font-size="13">${Math.abs(change).toFixed(2)}</text><path d="${path}" fill="none" stroke="#ef8730" stroke-width="5" stroke-linecap="round" stroke-linejoin="round"/><circle cx="${x(12)}" cy="${y(points[12][1])}" r="7" fill="#ef8730"/><text x="${Math.min(x(delay)+9,730)}" y="25" fill="#577491" font-size="12">response begins</text><text x="750" y="30" fill="#9b5b22" font-size="13">illustrative pump change</text>`;
   $('chart').setAttribute('aria-label', `Illustrative ${change < 0 ? 'decrease' : 'increase'} of ${Math.abs(change).toFixed(2)} dollars per gallon, beginning after ${delay} weeks and spreading over ${spread} weeks`);
 }
 ['shock','pass','delay','spread'].forEach(id => $(id).addEventListener('input', renderScenario));
