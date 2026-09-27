@@ -1,5 +1,7 @@
 # From Barrel to Pump
 
+> **Work in progress.** This public explainer is still being developed. Its data sources, calculations, and limitations are documented below; features and interpretations may change as they are reviewed and improved.
+
 An interactive, public explainer of how crude oil becomes gasoline, why pump prices differ among U.S. regions, how price changes can take time to pass through, and what historical gasoline prices mean after inflation.
 
 **Live site:** https://leecoursey.github.io/from-barrel-to-pump/  
