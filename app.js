@@ -7,7 +7,7 @@ const regions = {
   west: { name: 'West Coast', price: 4.094, color: '#dfaa9d', states: 'WA OR CA NV AZ AK HI'.split(' '), detail: 'West Coast prices reflect fuel specifications, taxes, operating costs, and supply constraints as well as transport distance. California’s special blend can limit substitutions during outages.' }
 };
 const regionFor = (abbr) => Object.keys(regions).find(key => regions[key].states.includes(abbr));
-let features = [], zipLookup = {}, cpi = {}, chosenState = null;
+let features = [], zipLookup = {}, cpi = {}, chosenState = null, eia = null;
 document.querySelectorAll('.mode-nav a').forEach(link => link.addEventListener('click', () => {
   document.querySelectorAll('.mode-nav a').forEach(item => item.classList.toggle('active', item === link));
 }));
@@ -67,11 +67,16 @@ function selectState(abbr) {
   const region = regions[regionFor(abbr)];
   $('region-name').textContent = region.name;
   $('state-name').textContent = `${feature.properties.name} · EIA petroleum region`;
-  $('region-price').textContent = `$${region.price.toFixed(3)}`;
+  const key = regionFor(abbr);
+  const latest = eia?.series[key]?.values.at(-1);
+  $('region-price').textContent = latest ? `$${latest[1].toFixed(3)}` : '—';
+  $('price-scope').textContent = latest ? `EIA ${latest[0]} survey for the whole ${region.name}; not a station quote. Published weekly.` : 'Latest weekly regional price is unavailable.';
+  if (eia?.series[key]) $('regional-source').href = eia.series[key].url;
   $('region-detail').textContent = region.detail;
   $('place').value = feature.properties.name;
-  $('search-message').textContent = `Showing ${feature.properties.name}. The price is the ${region.name} 2025 regional average.`;
+  $('search-message').textContent = `Showing ${feature.properties.name}. The price is the latest ${region.name} weekly average.`;
   document.querySelectorAll('.state').forEach(path => path.classList.toggle('selected', path.dataset.abbr === abbr));
+  window.dispatchEvent(new CustomEvent('region-selected', { detail: { key, name: region.name } }));
 }
 function findPlace() {
   const query = $('place').value.trim();
@@ -116,20 +121,6 @@ function renderScenario() {
 ['shock','pass','delay','spread'].forEach(id => $(id).addEventListener('input', renderScenario));
 renderScenario();
 
-const events = [
-  { year: '1973–74', title: 'Oil embargo', teaser: 'National annual prices rose as supply tightened.', detail: 'The oil embargo and broader supply shock raised prices. EIA’s historical table reports a national annual average for leaded regular gasoline of $0.388 in 1973 and $0.532 in 1974. Annual averages smooth the fast changes within each year; leaded regular is a historical grade, not the same specification as today’s unleaded regular.', points: [['1973 annual', '$0.388'], ['1974 annual', '$0.532']], month: '1974-06', price: '0.532', source: 'https://www.eia.gov/totalenergy/data/annual/txt/ptb0524.html', sourceText: 'EIA Annual Energy Review, Table 5.24' },
-  { year: '2001', title: 'After September 11', teaser: 'A major event did not create a lasting national pump-price spike.', detail: 'National weekly regular gasoline averaged $1.562 on September 10, $1.564 on September 17, and $1.522 on September 24. Initial local reports of sharp price increases do not describe the sustained national average. EIA’s October 2001 outlook discussed weakening demand and declining gasoline prices.', points: [['Sep 10', '$1.562'], ['Sep 17', '$1.564'], ['Sep 24', '$1.522']], month: '2001-09', price: '1.562', source: 'https://www.eia.gov/dnav/pet/hist/LeafHandler.ashx?f=w&n=pet&s=emm_epmr_pte_nus_dpg', sourceText: 'EIA weekly U.S. regular gasoline series' },
-  { year: '2005', title: 'Hurricane Katrina', teaser: 'Refinery outages and product supply hit pump prices quickly.', detail: 'National weekly regular gasoline averaged $2.610 on August 29, $3.069 on September 5, and $2.955 on September 12. Katrina disrupted Gulf Coast refining and supply routes. This is a case where the gasoline supply shock mattered alongside crude prices.', points: [['Aug 29', '$2.610'], ['Sep 5', '$3.069'], ['Sep 12', '$2.955']], month: '2005-09', price: '3.069', source: 'https://www.eia.gov/dnav/pet/hist/LeafHandler.ashx?f=w&n=pet&s=emm_epmr_pte_nus_dpg', sourceText: 'EIA weekly U.S. regular gasoline series' }
-];
-function renderEvent(selected = 0) {
-  $('events').innerHTML = events.map((e, i) => `<button class="event ${i === selected ? 'active' : ''}" type="button" data-event="${i}"><small>${e.year}</small><strong>${e.title}</strong><span>${e.teaser}</span></button>`).join('');
-  $('events').querySelectorAll('button').forEach(b => b.addEventListener('click', () => renderEvent(Number(b.dataset.event))));
-  const e = events[selected];
-  $('event-detail').innerHTML = `<h3>${e.title}</h3><p>${e.detail}</p><div class="event-points">${e.points.map(p => `<span>${p[0]}<b>${p[1]}</b></span>`).join('')}</div><p class="micro">${e.year === '1973–74' ? 'Annual leaded regular average; the month used for inflation is a midyear CPI proxy.' : 'Weekly national regular gasoline average; month used for inflation is the event month.'} <a href="${e.source}" target="_blank" rel="noopener">${e.sourceText} ↗</a></p><button id="use-event" type="button">Use this price in inflation comparison ↓</button>`;
-  $('use-event').addEventListener('click', () => { $('old-price').value = e.price; $('old-month').value = e.month; renderInflation(); $('inflation').scrollIntoView({ behavior: 'smooth' }); });
-}
-renderEvent();
-
 function renderInflation() {
   const amount = Number($('old-price').value), from = $('old-month').value, to = $('compare-month').value;
   if (!Number.isFinite(amount) || amount < 0 || !cpi[from] || !cpi[to]) {
@@ -146,8 +137,9 @@ function renderInflation() {
 Promise.all([
   fetch('./assets/data/states.geojson').then(r => r.json()),
   fetch('./assets/data/zip-state.json').then(r => r.json()),
-  fetch('./assets/data/cpi.json').then(r => r.json())
-]).then(([geo, zips, prices]) => { features = geo.features; zipLookup = zips; cpi = prices; drawMap(); selectState('IL'); renderInflation(); }).catch(() => {
+  fetch('./assets/data/cpi.json').then(r => r.json()),
+  fetch('./assets/data/eia-weekly.json').then(r => r.json())
+]).then(([geo, zips, prices, measured]) => { features = geo.features; zipLookup = zips; cpi = prices; eia = measured; drawMap(); $('map-date').textContent = `EIA week of ${eia.series.national.values.at(-1)[0]}`; $('footer-data-date').textContent = `From Barrel to Pump · EIA retrieved ${eia.retrieved} · CPI through August 2026`; selectState('IL'); renderInflation(); }).catch(() => {
   $('search-message').textContent = 'Map data could not load. Please reload the page.';
   $('inflation-formula').textContent = 'CPI data could not load. Please reload the page.';
 });

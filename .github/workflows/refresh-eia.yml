@@ -1,0 +1,48 @@
+name: Refresh EIA weekly prices
+on:
+  schedule:
+    # EIA normally releases Monday evening Eastern; Tuesday allows for holidays.
+    - cron: '30 3 * * 3'
+  workflow_dispatch:
+permissions:
+  contents: write
+jobs:
+  refresh:
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '24'
+      - name: Download official EIA tables
+        shell: pwsh
+        run: |
+          $ErrorActionPreference = 'Stop'
+          New-Item -ItemType Directory -Force -Path data | Out-Null
+          $series = @{
+            'eia-weekly-retail.html' = 'EMM_EPMR_PTE_NUS_DPG'
+            'eia-weekly-east.html' = 'EMM_EPMR_PTE_R10_DPG'
+            'eia-weekly-mid.html' = 'EMM_EPMR_PTE_R20_DPG'
+            'eia-weekly-gulf.html' = 'EMM_EPMR_PTE_R30_DPG'
+            'eia-weekly-rocky.html' = 'EMM_EPMR_PTE_R40_DPG'
+            'eia-weekly-west.html' = 'EMM_EPMR_PTE_R50_DPG'
+            'eia-weekly-wti.html' = 'RWTC'
+          }
+          foreach ($file in $series.Keys) {
+            $url = 'https://www.eia.gov/dnav/pet/hist/LeafHandler.ashx?f=w&n=pet&s=' + $series[$file]
+            Invoke-WebRequest -Uri $url -OutFile (Join-Path data $file)
+          }
+      - name: Validate and build static dataset
+        shell: pwsh
+        run: |
+          $env:EIA_SOURCE_DIR = 'data'
+          node scripts/refresh-eia.mjs
+      - name: Commit published observations
+        shell: pwsh
+        run: |
+          git add assets/data/eia-weekly.json
+          if (git diff --cached --quiet) { exit 0 }
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git commit -m 'Refresh EIA weekly price observations'
+          git push
