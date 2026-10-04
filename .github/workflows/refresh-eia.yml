@@ -27,6 +27,7 @@ jobs:
             'eia-weekly-rocky.html' = 'EMM_EPMR_PTE_R40_DPG'
             'eia-weekly-west.html' = 'EMM_EPMR_PTE_R50_DPG'
             'eia-weekly-wti.html' = 'RWTC'
+            'eia-weekly-wholesale.html' = 'EER_EPMRU_PF4_Y35NY_DPG'
           }
           foreach ($file in $series.Keys) {
             $url = 'https://www.eia.gov/dnav/pet/hist/LeafHandler.ashx?f=w&n=pet&s=' + $series[$file]

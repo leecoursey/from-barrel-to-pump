@@ -65,7 +65,7 @@ function renderChart() {
   const national = annual ? [['1973-07-01', .388], ['1974-07-01', .532]].map(([date, original]) => ({ date, original, value: adjusted(original, date) })).filter(row => row.value !== null) : seriesInView('national', start, end, useMonthly);
   const region = annual ? [] : seriesInView(selectedRegion, start, end, useMonthly);
   const wholesale = annual ? [] : seriesInView('wholesale', start, end, useMonthly);
-  const series = [{ rows: crude, color: '#067b92', panel: 'crude' }, { rows: wholesale, color: '#c69400', panel: 'gas' }, { rows: national, color: '#ef8a20', panel: 'gas' }, { rows: region, color: '#8058c8', panel: 'gas' }];
+  const series = [{ rows: crude, color: '#496e74', panel: 'crude' }, { rows: wholesale, color: '#a47b45', panel: 'gas' }, { rows: national, color: '#ad755d', panel: 'gas' }, { rows: region, color: '#727485', panel: 'gas' }];
   if (!crude.length || !national.length) { $('chart-readout').textContent = 'No overlapping price and CPI observations for this selection.'; return; }
   const minDate = Date.parse(start), maxDate = Date.parse(end);
   const x = date => 78 + (Date.parse(date) - minDate) / (maxDate - minDate) * 862;
@@ -80,20 +80,20 @@ function renderChart() {
     scales[panel] = y;
     for (const value of [low, (low + high) / 2, high]) {
       const yy = y(value);
-      add(svg, 'line', { x1: 78, x2: 940, y1: yy, y2: yy, stroke: '#dce6ee', 'stroke-width': 1 });
-      add(svg, 'text', { x: 68, y: yy + 4, 'text-anchor': 'end', fill: '#5f7790', 'font-size': 11 }, money(value, panel === 'crude' ? 0 : 2));
+      add(svg, 'line', { x1: 78, x2: 940, y1: yy, y2: yy, stroke: '#d8ded9', 'stroke-width': 1 });
+      add(svg, 'text', { x: 68, y: yy + 4, 'text-anchor': 'end', fill: '#607078', 'font-size': 11 }, money(value, panel === 'crude' ? 0 : 2));
     }
   }
-  add(svg, 'text', { x: 78, y: 29, fill: '#067b92', 'font-size': 13, 'font-weight': 700 }, annual ? 'Refiner crude cost · $/barrel' : 'WTI crude benchmark · $/barrel');
-  add(svg, 'text', { x: 78, y: 174, fill: '#a7641a', 'font-size': 13, 'font-weight': 700 }, annual ? 'Leaded regular retail · $/gallon' : 'Gasoline wholesale benchmark and retail · $/gallon');
+  add(svg, 'text', { x: 78, y: 29, fill: '#496e74', 'font-size': 13, 'font-weight': 700 }, annual ? 'Refiner crude cost · $/barrel' : 'WTI crude benchmark · $/barrel');
+  add(svg, 'text', { x: 78, y: 174, fill: '#83513f', 'font-size': 13, 'font-weight': 700 }, annual ? 'Leaded regular retail · $/gallon' : 'Gasoline wholesale benchmark and retail · $/gallon');
   const ticks = annual ? ['1973-07-01', '1974-07-01'] : useMonthly ? [start, ...Array.from({ length: 8 }, (_, i) => `${1995 + i * 5}-01-01`).filter(date => date <= end), end] : [start, end];
   ticks.forEach(date => {
-    add(svg, 'line', { x1: x(date), x2: x(date), y1: 280, y2: 286, stroke: '#7891a9' });
-    add(svg, 'text', { x: x(date), y: 308, 'text-anchor': 'middle', fill: '#5d7692', 'font-size': 12 }, useMonthly || annual ? date.slice(0, 4) : fmtDate(date));
+    add(svg, 'line', { x1: x(date), x2: x(date), y1: 280, y2: 286, stroke: '#8a9b98' });
+    add(svg, 'text', { x: x(date), y: 308, 'text-anchor': 'middle', fill: '#607078', 'font-size': 12 }, useMonthly || annual ? date.slice(0, 4) : fmtDate(date));
   });
   if (win.marker) {
-    add(svg, 'line', { x1: x(win.marker), x2: x(win.marker), y1: 35, y2: 278, stroke: '#a14949', 'stroke-width': 1.4, 'stroke-dasharray': '5 5' });
-    add(svg, 'text', { x: x(win.marker) + 5, y: 329, fill: '#9a4444', 'font-size': 11 }, fmtDate(win.marker));
+    add(svg, 'line', { x1: x(win.marker), x2: x(win.marker), y1: 35, y2: 278, stroke: '#a6644f', 'stroke-width': 1.4, 'stroke-dasharray': '5 5' });
+    add(svg, 'text', { x: x(win.marker) + 5, y: 329, fill: '#83513f', 'font-size': 11 }, fmtDate(win.marker));
   }
   series.forEach(item => {
     if (!item.rows.length) return;
@@ -121,10 +121,11 @@ function renderChart() {
   });
   if (annual) $('chart-note').textContent = '1973–74 uses annual refiner acquisition cost and leaded regular pump averages. Dots cannot show a monthly lag.';
   else $('chart-note').textContent = `Weekly EIA observations${useMonthly ? ' are averaged by calendar month for the full-history view; the latest month may be partial' : ''}. WTI is a benchmark, not a refinery’s crude cost. NY Harbor spot gasoline is one wholesale market, not a national wholesale average. ${dollarMode === 'real' ? 'Months without a published CPI are omitted.' : ''} No future prices are drawn.`;
-  inspect(Date.parse(national.at(-1).date));
+  inspect(Date.parse(win.marker || national.at(-1).date));
 }
 function selectWindow(id, scroll = false) {
   active = id;
+  window.showPriceMode?.('history');
   document.querySelectorAll('[data-window]').forEach(button => button.classList.toggle('active', button.dataset.window === id));
   renderChart();
   if (scroll) $('prices').scrollIntoView({ behavior: 'smooth', block: 'start' });
@@ -142,7 +143,7 @@ function renderEvent(id = '2001') {
   $('events').innerHTML = events.map(item => `<button class="event ${item.id === id ? 'active' : ''}" type="button" data-event="${item.id}"><small>${item.year}</small><strong>${item.title}</strong><span>${item.teaser}</span></button>`).join('');
   $('events').querySelectorAll('button').forEach(button => button.addEventListener('click', () => { renderEvent(button.dataset.event); selectWindow(button.dataset.event, true); }));
   $('event-detail').innerHTML = `<h3>${event.title}: what the data can and cannot show</h3>${event.html}<button id="use-event" type="button">Compare this pump price with inflation</button>`;
-  $('use-event').addEventListener('click', () => { $('old-price').value = event.price; $('old-month').value = event.month; $('old-price').dispatchEvent(new Event('input')); $('inflation').scrollIntoView({ behavior: 'smooth' }); });
+  $('use-event').addEventListener('click', () => { window.showPriceMode?.('history'); $('old-price').value = event.price; $('old-month').value = event.month; $('old-price').dispatchEvent(new Event('input')); $('inflation').scrollIntoView({ behavior: 'smooth' }); });
 }
 renderEvent();
 Promise.all([fetch(`./assets/data/eia-weekly.json?loaded=${Date.now()}`, { cache: 'no-store' }).then(response => response.json()), fetch('./assets/data/cpi.json').then(response => response.json())]).then(([measured, prices]) => { data = measured; cpi = prices; renderChart(); }).catch(() => { $('chart-readout').textContent = 'EIA or BLS price data could not load. Reload the page or inspect the source links.'; });

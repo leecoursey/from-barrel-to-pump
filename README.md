@@ -15,10 +15,10 @@ This is an **AI-assisted project**. The human project owner set the goals, reque
 
 ## What visitors can do
 
-- Click any state or search by state name, state code, or a five-digit ZIP Code. State colors show **2024 annual EIA state motor gasoline price estimates**, with the selected state's approximate dollars per gallon beside the map. The panel separately reports the latest published **weekly PADD regional regular gasoline average**. Neither is a live station price.
-- Explore the four supply stages and separate 2025 crude processing, crude imports, finished gasoline imports, and blending component imports.
-- Move the scenario sliders and immediately see the simulated 12-week response beside them. It is an illustration, **not a forecast or a measured local response**.
-- Start with a **1990–present** price history comparing observed WTI crude ($/barrel), New York Harbor wholesale regular gasoline ($/gallon), U.S. regular retail gasoline ($/gallon), and the selected region's regular retail gasoline on synchronized date axes. Switch the entire chart between actual dollars at the time and inflation-adjusted dollars, using the target month in the comparison panel. Open recent prices, September 2001, Katrina, or the 1973–74 annual comparison. Hover or focus the chart for exact observations and original nominal values.
+- Follow the four supply stages first, then compare separate 2025 crude processing, crude imports, finished gasoline imports, and blending component imports.
+- Click any state, use the state selector, or search by state name, state code, or five-digit ZIP Code. State colors show **2024 annual EIA state motor gasoline price estimates**. The selected panel instead leads with the latest published **weekly PADD regional regular gasoline average**, clearly dated and labeled. An expandable reference section holds the older state figure and 2025 national price breakdown. None is a live station price.
+- Switch between **observed price history** and **an illustrative price-change scenario** in one workspace. The sliders redraw a 12-week response beside them, including decreases. The scenario is **not a forecast or a measured local response**.
+- Start the observed chart with **1990–present** WTI crude ($/barrel), New York Harbor wholesale regular gasoline ($/gallon), U.S. regular retail gasoline ($/gallon), and selected-region regular retail gasoline on synchronized date axes. Switch between actual dollars and inflation-adjusted dollars using the comparison month. Open recent prices, September 2001, Katrina, or 1973–74 annual data. Hover or focus the chart for exact observations and original nominal values.
 - Examine sourced explanations for the 1973–74 oil embargo, September 2001, and Hurricane Katrina, with both crude and pump prices and explicit limits of the evidence.
 - Enter any nonnegative nominal price and compare purchasing power between any two available months from January 1970 through August 2026.
 

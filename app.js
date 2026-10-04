@@ -9,16 +9,41 @@ const regions = {
 const regionFor = (abbr) => Object.keys(regions).find(key => regions[key].states.includes(abbr));
 let features = [], zipLookup = {}, cpi = {}, chosenState = null, eia = null, statePrices = null;
 const heatBands = [
-  { max: 3, color: '#d5ebe8', label: 'Under $3.00' },
-  { max: 3.25, color: '#9fcebc', label: '$3.00–$3.24' },
-  { max: 3.5, color: '#f4d589', label: '$3.25–$3.49' },
-  { max: 4, color: '#ec9a60', label: '$3.50–$3.99' },
-  { max: Infinity, color: '#bd575d', label: '$4.00+' }
+  { max: 3, color: '#e5eee8', label: 'Under $3.00' },
+  { max: 3.25, color: '#c0d7cc', label: '$3.00–$3.24' },
+  { max: 3.5, color: '#94bdb0', label: '$3.25–$3.49' },
+  { max: 4, color: '#659a8e', label: '$3.50–$3.99' },
+  { max: Infinity, color: '#336f6b', label: '$4.00+' }
 ];
-const heatColor = price => heatBands.find(band => price < band.max)?.color || '#dceaf2';
+const heatColor = price => heatBands.find(band => price < band.max)?.color || '#e5eee8';
 document.querySelectorAll('.mode-nav a').forEach(link => link.addEventListener('click', () => {
   document.querySelectorAll('.mode-nav a').forEach(item => item.classList.toggle('active', item === link));
+  if (link.dataset.openMode) window.showPriceMode(link.dataset.openMode);
 }));
+function showPriceMode(mode) {
+  const scenario = mode === 'scenario';
+  $('history-pane').hidden = scenario;
+  $('scenario-pane').hidden = !scenario;
+  $('history-mode-tab').setAttribute('aria-selected', String(!scenario));
+  $('scenario').setAttribute('aria-selected', String(scenario));
+  $('history-mode-tab').tabIndex = scenario ? -1 : 0;
+  $('scenario').tabIndex = scenario ? 0 : -1;
+}
+window.showPriceMode = showPriceMode;
+document.querySelectorAll('[data-price-mode]').forEach(button => button.addEventListener('click', () => showPriceMode(button.dataset.priceMode)));
+document.querySelector('.price-mode-tabs').addEventListener('keydown', event => {
+  if (!['ArrowLeft', 'ArrowRight', 'Home', 'End'].includes(event.key)) return;
+  event.preventDefault();
+  const target = event.key === 'ArrowLeft' || event.key === 'Home' ? $('history-mode-tab') : $('scenario');
+  showPriceMode(target.dataset.priceMode); target.focus();
+});
+const mapToggle = $('map-toggle');
+mapToggle.addEventListener('click', () => {
+  const open = $('map-content').classList.toggle('open');
+  mapToggle.setAttribute('aria-expanded', String(open));
+  mapToggle.textContent = open ? 'Hide map' : 'Explore map';
+});
+$('state-select').addEventListener('change', event => selectState(event.target.value));
 
 function project([lon, lat], abbr) {
   if (abbr === 'AK') return [24 + ((lon > 0 ? lon - 360 : lon) + 180) * 4.5, 410 + (72 - lat) * 5.1];
@@ -41,13 +66,12 @@ function drawMap() {
     const path = document.createElementNS('http://www.w3.org/2000/svg', 'path');
     path.setAttribute('d', geometryPath(feature.geometry, abbr));
     const statePrice = statePrices?.states[abbr]?.pricePerGallon;
-    const fill = Number.isFinite(statePrice) ? heatColor(statePrice) : '#dceaf2';
+    const fill = Number.isFinite(statePrice) ? heatColor(statePrice) : '#e5eee8';
     path.setAttribute('fill', fill);
     path.style.setProperty('--state-fill', fill);
     path.setAttribute('fill-rule', 'evenodd');
     path.setAttribute('class', 'state');
-    path.setAttribute('tabindex', '0');
-    path.setAttribute('role', 'button');
+    path.setAttribute('tabindex', '-1');
     path.setAttribute('aria-label', `${name}: ${Number.isFinite(statePrice) ? `$${statePrice.toFixed(2)} per gallon, 2024 EIA annual state estimate` : 'state estimate unavailable'}. ${region.name} petroleum region. Select for details.`);
     const title = document.createElementNS('http://www.w3.org/2000/svg', 'title');
     title.textContent = `${name} · 2024 estimate: ${Number.isFinite(statePrice) ? `$${statePrice.toFixed(2)}/gal` : 'unavailable'}`;
@@ -73,6 +97,7 @@ function drawMap() {
     </g>`);
   $('legend').innerHTML = `<strong>2024 estimated state price / gallon</strong>${heatBands.map(band => `<span><i class="heat-swatch" style="background:${band.color}"></i>${band.label}</span>`).join('')}<a href="https://www.eia.gov/state/seds/sep_fuel/html/pdf/fuel_pr_mg.pdf" target="_blank" rel="noopener">EIA data ↗</a>`;
   $('states-list').innerHTML = features.map(f => `<option value="${f.properties.name}"></option>`).join('');
+  $('state-select').innerHTML = `<option value="">Choose a state</option>${[...features].sort((a,b) => a.properties.name.localeCompare(b.properties.name)).map(f => `<option value="${f.properties.abbr}">${f.properties.name}</option>`).join('')}`;
 }
 function selectState(abbr) {
   const feature = features.find(f => f.properties.abbr === abbr);
@@ -93,6 +118,7 @@ function selectState(abbr) {
   if (eia?.series[key]) $('regional-source').href = eia.series[key].url;
   $('region-detail').textContent = region.detail;
   $('place').value = feature.properties.name;
+  $('state-select').value = abbr;
   $('search-message').textContent = `${feature.properties.name} selected · 2024 state map / latest ${region.name} weekly average`;
   document.querySelectorAll('.state').forEach(path => path.classList.toggle('selected', path.dataset.abbr === abbr));
   window.dispatchEvent(new CustomEvent('region-selected', { detail: { key, name: region.name } }));
@@ -115,10 +141,10 @@ const steps = [
   { icon: '▤', name: 'At the pump', sub: 'Retail price and local conditions', title: 'The posted price includes more than crude', text: 'A station’s price reflects crude, refining, distribution and marketing, and taxes. Retail competition, inventories, and when a station replaces its supply also affect the timing and size of a price change.', link: 'https://www.eia.gov/petroleum/gasdiesel/pump_methodology.php' }
 ];
 function renderSteps(selected = 0) {
-  $('steps').innerHTML = steps.map((s, i) => `<button class="step ${i === selected ? 'active' : ''}" data-step="${i}" type="button"><span class="symbol">${s.icon}</span><b>${s.name}</b><small>${s.sub}</small></button>`).join('');
+  $('steps').innerHTML = steps.map((s, i) => `<button class="step ${i === selected ? 'active' : ''}" data-step="${i}" type="button" aria-pressed="${i === selected}" aria-controls="step-detail"><span class="symbol" aria-hidden="true">${s.icon}</span><b>${s.name}</b><small>${s.sub}</small></button>`).join('');
   $('steps').querySelectorAll('button').forEach(b => b.addEventListener('click', () => renderSteps(Number(b.dataset.step))));
   const s = steps[selected];
-  $('step-detail').innerHTML = `<b>${s.title}</b><p>${s.text} <a href="${s.link}" target="_blank" rel="noopener">EIA source ↗</a></p>`;
+  $('step-detail').innerHTML = `<h3>${s.title}</h3><p>${s.text} <a href="${s.link}" target="_blank" rel="noopener">EIA source ↗</a></p>`;
 }
 renderSteps();
 
@@ -131,11 +157,11 @@ function renderScenario() {
   $('spread-value').textContent = `${spread} ${spread === 1 ? 'week' : 'weeks'}`;
   $('scenario-total').textContent = `${change < 0 ? '−' : '+'} $${Math.abs(change).toFixed(2)} / gallon`;
   const points = Array.from({ length: 13 }, (_, week) => [week, Math.max(0, Math.min(1, (week - delay) / spread))]);
-  const y = fraction => 150 - fraction * 110;
+  const y = fraction => 88 - fraction * (change < 0 ? -62 : 62);
   const x = week => 46 + week * 75;
   const path = points.map(([week, fraction], i) => `${i ? 'L' : 'M'}${x(week)},${y(fraction)}`).join(' ');
-  $('chart').innerHTML = `<line x1="46" y1="150" x2="964" y2="150" stroke="#a9bfd2"/><line x1="46" y1="40" x2="964" y2="40" stroke="#d5e3ed" stroke-dasharray="5 6"/><line x1="${x(delay)}" y1="29" x2="${x(delay)}" y2="151" stroke="#d5e3ed" stroke-dasharray="5 6"/><text x="4" y="153" fill="#577491" font-size="13">0</text><text x="4" y="43" fill="#577491" font-size="13">${Math.abs(change).toFixed(2)}</text><path d="${path}" fill="none" stroke="#ef8730" stroke-width="5" stroke-linecap="round" stroke-linejoin="round"/><circle cx="${x(12)}" cy="${y(points[12][1])}" r="7" fill="#ef8730"/><text x="${Math.min(x(delay)+9,730)}" y="25" fill="#577491" font-size="12">response begins</text><text x="750" y="30" fill="#9b5b22" font-size="13">illustrative pump change</text>`;
-  $('chart').setAttribute('aria-label', `Illustrative ${change < 0 ? 'decrease' : 'increase'} of ${Math.abs(change).toFixed(2)} dollars per gallon, beginning after ${delay} weeks and spreading over ${spread} weeks`);
+  $('chart').innerHTML = `<line x1="46" y1="88" x2="964" y2="88" stroke="#a9bab5"/><line x1="46" y1="${y(1)}" x2="964" y2="${y(1)}" stroke="#d8ded9" stroke-dasharray="5 6"/><line x1="${x(delay)}" y1="22" x2="${x(delay)}" y2="156" stroke="#d8ded9" stroke-dasharray="5 6"/><text x="4" y="92" fill="#607078" font-size="13">0</text><text x="4" y="${y(1)+4}" fill="#607078" font-size="13">${change < 0 ? '−' : '+'}${Math.abs(change).toFixed(2)}</text><path d="${path}" fill="none" stroke="#a6644f" stroke-width="5" stroke-linecap="round" stroke-linejoin="round"/><circle cx="${x(12)}" cy="${y(points[12][1])}" r="7" fill="#a6644f"/><text x="${Math.min(x(delay)+9,730)}" y="18" fill="#607078" font-size="12">response begins</text><text x="750" y="170" fill="#83513f" font-size="13">illustrative pump change</text>`;
+  $('chart').setAttribute('aria-label', `Illustrative ${change < 0 ? 'decrease' : 'increase'} of ${Math.abs(change).toFixed(2)} dollars per gallon, beginning after ${delay} ${delay === 1 ? 'week' : 'weeks'} and spreading over ${spread} ${spread === 1 ? 'week' : 'weeks'}`);
 }
 ['shock','pass','delay','spread'].forEach(id => $(id).addEventListener('input', renderScenario));
 renderScenario();
