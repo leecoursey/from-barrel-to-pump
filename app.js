@@ -7,7 +7,7 @@ const regions = {
   west: { name: 'West Coast', price: 4.094, color: '#dfaa9d', states: 'WA OR CA NV AZ AK HI'.split(' '), detail: 'West Coast prices reflect fuel specifications, taxes, operating costs, and supply constraints as well as transport distance. California’s special blend can limit substitutions during outages.' }
 };
 const regionFor = (abbr) => Object.keys(regions).find(key => regions[key].states.includes(abbr));
-let features = [], zipLookup = {}, cpi = {}, chosenState = null, eia = null, statePrices = null, supply = null, origins = null;
+let features = [], zipLookup = {}, cpi = {}, chosenState = null, eia = null, statePrices = null, supply = null, origins = null, districtFlows = null;
 const heatBands = [
   { max: 3, color: '#e5eee8', label: 'Under $3.00' },
   { max: 3.25, color: '#c0d7cc', label: '$3.00–$3.24' },
@@ -44,7 +44,8 @@ mapToggle.addEventListener('click', () => {
   mapToggle.textContent = open ? 'Hide map' : 'Explore map';
 });
 $('state-select').addEventListener('change', event => selectState(event.target.value));
-['layer-crude','layer-gas','layer-refineries','layer-prices'].forEach(id => $(id).addEventListener('change', drawMap));
+['layer-crude','layer-gas','layer-refineries','layer-district-flows','layer-prices'].forEach(id => $(id).addEventListener('change', drawMap));
+$('flow-product').addEventListener('change', () => { drawMap(); renderDistrictFlows(); });
 $('supply-select').addEventListener('change', event => {
   if (!event.target.value) return;
   const [type, index] = event.target.value.split(':');
@@ -87,6 +88,31 @@ function drawMap() {
     path.addEventListener('keydown', e => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); selectState(abbr); } });
     svg.append(path);
   }
+  if ($('layer-district-flows').checked) {
+    const product = districtFlows[$('flow-product').value];
+    const shown = product.flows.slice(0, 6);
+    svg.insertAdjacentHTML('beforeend', '<defs><marker id="district-arrow" markerUnits="userSpaceOnUse" markerWidth="10" markerHeight="10" refX="8" refY="5" orient="auto"><path d="M0 1 L8 5 L0 9 Z" fill="#66718b"/></marker></defs>');
+    shown.forEach(([from, to, value]) => {
+      const a = districtFlows.districts[from], b = districtFlows.districts[to];
+      const [x1,y1] = project([a.lon,a.lat], ''), [x2,y2] = project([b.lon,b.lat], '');
+      const length = Math.hypot(x2-x1,y2-y1) || 1;
+      const bend = 24;
+      const cx = (x1+x2)/2 - (y2-y1)/length*bend, cy = (y1+y2)/2 + (x2-x1)/length*bend;
+      const path = document.createElementNS('http://www.w3.org/2000/svg', 'path');
+      path.setAttribute('d', `M${x1.toFixed(1)},${y1.toFixed(1)} Q${cx.toFixed(1)},${cy.toFixed(1)} ${x2.toFixed(1)},${y2.toFixed(1)}`);
+      path.setAttribute('class', 'district-flow'); path.setAttribute('stroke-width', (2 + Math.sqrt(value / shown[0][2]) * 3).toFixed(1));
+      path.setAttribute('marker-end', 'url(#district-arrow)');
+      path.setAttribute('aria-label', `${a.name} to ${b.name}: ${formatFlow(value)} of ${$('flow-product').value === 'crude' ? 'crude oil' : 'finished gasoline'} moved in 2025. Schematic district connection.`);
+      const title = document.createElementNS('http://www.w3.org/2000/svg', 'title'); title.textContent = `${a.name} → ${b.name} · ${formatFlow(value)} in 2025`; path.append(title);
+      svg.append(path);
+    });
+    Object.entries(districtFlows.districts).forEach(([id, district]) => {
+      const [x,y] = project([district.lon,district.lat], '');
+      const label = document.createElementNS('http://www.w3.org/2000/svg', 'text');
+      label.setAttribute('x', x); label.setAttribute('y', y + 4); label.setAttribute('class', 'district-label');
+      label.textContent = id; svg.append(label);
+    });
+  }
   if ($('layer-refineries').checked) supply.refineries.forEach((site, i) => {
     const [x, y] = project([site.lon, site.lat], site.state === 'Alaska' ? 'AK' : site.state === 'Hawaii' ? 'HI' : '');
     const marker = document.createElementNS('http://www.w3.org/2000/svg', 'circle');
@@ -116,6 +142,14 @@ function drawMap() {
   $('legend').innerHTML = `<strong>2024 estimated state price / gallon</strong>${heatBands.map(band => `<span><i class="heat-swatch" style="background:${band.color}"></i>${band.label}</span>`).join('')}<a href="https://www.eia.gov/state/seds/sep_fuel/html/pdf/fuel_pr_mg.pdf" target="_blank" rel="noopener">EIA data ↗</a>`;
   $('states-list').innerHTML = features.map(f => `<option value="${f.properties.name}"></option>`).join('');
   $('state-select').innerHTML = `<option value="">Choose a state</option>${[...features].sort((a,b) => a.properties.name.localeCompare(b.properties.name)).map(f => `<option value="${f.properties.abbr}">${f.properties.name}</option>`).join('')}`;
+}
+function formatFlow(thousandBarrels) {
+  return thousandBarrels >= 1000 ? `${(thousandBarrels / 1000).toFixed(1)} million barrels` : `${thousandBarrels.toLocaleString()} thousand barrels`;
+}
+function renderDistrictFlows() {
+  const data = districtFlows[$('flow-product').value];
+  $('district-flow-list').innerHTML = data.flows.map(([from, to, value]) => `<div><span>PADD ${from} ${districtFlows.districts[from].name} → PADD ${to} ${districtFlows.districts[to].name}</span><strong>${formatFlow(value)}</strong></div>`).join('');
+  $('flow-source').href = data.source;
 }
 function inspectSupply(type, index) {
   const item = type === 'port' ? supply.ports[index] : supply.refineries[index];
@@ -222,11 +256,12 @@ Promise.all([
   fetch(`./assets/data/eia-weekly.json?loaded=${Date.now()}`, { cache: 'no-store' }).then(r => r.json()),
   fetch('./assets/data/eia-state-2024.json').then(r => r.json()),
   fetch('./assets/data/supply-map.json').then(r => r.json()),
-  fetch('./assets/data/import-origins-2025.json').then(r => r.json())
-]).then(([geo, zips, prices, measured, stateData, supplyData, originData]) => {
-  features = geo.features; zipLookup = zips; cpi = prices; eia = measured; statePrices = stateData; supply = supplyData; origins = originData;
+  fetch('./assets/data/import-origins-2025.json').then(r => r.json()),
+  fetch('./assets/data/district-flows-2025.json').then(r => r.json())
+]).then(([geo, zips, prices, measured, stateData, supplyData, originData, flowData]) => {
+  features = geo.features; zipLookup = zips; cpi = prices; eia = measured; statePrices = stateData; supply = supplyData; origins = originData; districtFlows = flowData;
   $('supply-select').innerHTML = '<option value="">Choose a site</option><optgroup label="Ports">' + supply.ports.map((p, i) => `<option value="port:${i}">${p.name}</option>`).join('') + '</optgroup><optgroup label="Refineries">' + supply.refineries.map((r, i) => `<option value="refinery:${i}">${r.site}, ${r.state} · ${r.company}</option>`).join('') + '</optgroup>';
-  drawMap(); renderOrigins(); $('footer-data-date').textContent = `From Barrel to Pump · USACE ports ${supply.portYear} · EIA refineries 2026 · weekly prices retrieved ${eia.retrieved} · CPI through August 2026`; selectState('IL'); renderInflation();
+  drawMap(); renderOrigins(); renderDistrictFlows(); $('footer-data-date').textContent = `From Barrel to Pump · USACE ports ${supply.portYear} · EIA refineries 2026 · district flows ${districtFlows.year} · weekly prices retrieved ${eia.retrieved} · CPI through August 2026`; selectState('IL'); renderInflation();
 }).catch(() => {
   $('search-message').textContent = 'Map data could not load. Please reload the page.';
   $('inflation-formula').textContent = 'CPI data could not load. Please reload the page.';
