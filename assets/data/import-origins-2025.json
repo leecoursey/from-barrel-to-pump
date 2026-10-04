@@ -1,0 +1,14 @@
+{
+  "year": 2025,
+  "unit": "thousand barrels per year",
+  "crude": {
+    "total": 2251381,
+    "source": "https://www.eia.gov/dnav/pet/pet_move_impcus_a2_nus_epc0_im0_mbbl_a.htm",
+    "countries": [["Canada",1427229],["Mexico",139928],["Saudi Arabia",98278],["Guyana",76020],["Brazil",72382],["Colombia",70883],["Iraq",65160],["Venezuela",51033]]
+  },
+  "finishedGasoline": {
+    "total": 45229,
+    "source": "https://www.eia.gov/dnav/pet/pet_move_impcus_a2_nus_epm0f_im0_mbbl_a.htm",
+    "countries": [["Bahamas",10078],["Canada",8282],["Netherlands",6912],["India",3991],["South Korea",3698],["Belgium",2551],["Spain",1420],["United Kingdom",1088]]
+  }
+}
